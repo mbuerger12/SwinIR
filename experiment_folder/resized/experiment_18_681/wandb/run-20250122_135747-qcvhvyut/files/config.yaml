@@ -1,0 +1,96 @@
+_wandb:
+    value:
+        cli_version: 0.18.7
+        m: []
+        python_version: 3.9.20
+        t:
+            "1":
+                - 1
+                - 5
+                - 41
+                - 53
+                - 55
+                - 63
+                - 105
+            "2":
+                - 1
+                - 5
+                - 41
+                - 53
+                - 55
+                - 63
+                - 105
+            "3":
+                - 23
+                - 55
+            "4": 3.9.20
+            "5": 0.18.7
+            "8":
+                - 3
+                - 5
+            "12": 0.18.7
+            "13": windows-amd64
+batch_size:
+    value: 8
+config:
+    value: null
+crop_size:
+    value: 256
+data_dir:
+    value: ./datafolder/
+dataset:
+    value: resized
+experiment_name:
+    value: first_experiment
+gradient_clip:
+    value: 0.01
+img_range:
+    value: 1
+in_memory:
+    value: true
+logstep_train:
+    value: 1
+loss:
+    value: l1
+lr:
+    value: 0.01
+lr_gamma:
+    value: 0.99
+lr_scheduler:
+    value: step
+lr_step:
+    value: 100
+max_rotation:
+    value: 15
+momentum:
+    value: 0.9
+no_flip:
+    value: false
+num_epochs:
+    value: 4500
+num_workers:
+    value: 8
+resume:
+    value: null
+save_dir:
+    value: ./experiment_folder/
+save_model:
+    value: both
+scaling:
+    value: 8
+seed:
+    value: 12345
+skip_first:
+    value: false
+upscale:
+    value: 8
+val_every_n_epochs:
+    value: 3
+w_decay:
+    value: 1e-05
+wandb:
+    value: true
+wandb_project:
+    value: DADA-SR
+window_size:
+    value: 8

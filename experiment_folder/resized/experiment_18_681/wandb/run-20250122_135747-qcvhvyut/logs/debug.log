@@ -1,0 +1,27 @@
+2025-01-22 13:57:47,629 INFO    MainThread:20248 [wandb_setup.py:_flush():79] Current SDK version is 0.18.7
+2025-01-22 13:57:47,629 INFO    MainThread:20248 [wandb_setup.py:_flush():79] Configure stats pid to 20248
+2025-01-22 13:57:47,629 INFO    MainThread:20248 [wandb_setup.py:_flush():79] Loading settings from C:\Users\maxim\.config\wandb\settings
+2025-01-22 13:57:47,629 INFO    MainThread:20248 [wandb_setup.py:_flush():79] Loading settings from G:\SwinIR\wandb\settings
+2025-01-22 13:57:47,629 INFO    MainThread:20248 [wandb_setup.py:_flush():79] Loading settings from environment variables: {}
+2025-01-22 13:57:47,629 INFO    MainThread:20248 [wandb_setup.py:_flush():79] Applying setup settings: {'mode': None, '_disable_service': None}
+2025-01-22 13:57:47,629 INFO    MainThread:20248 [wandb_setup.py:_flush():79] Inferring run settings from compute environment: {'program_relpath': 'run_train.py', 'program_abspath': 'G:\\SwinIR\\run_train.py', 'program': 'G:\\SwinIR\\run_train.py'}
+2025-01-22 13:57:47,629 INFO    MainThread:20248 [wandb_setup.py:_flush():79] Applying login settings: {}
+2025-01-22 13:57:47,630 INFO    MainThread:20248 [wandb_init.py:_log_setup():533] Logging user logs to ./experiment_folder/resized\experiment_18_681\wandb\run-20250122_135747-qcvhvyut\logs\debug.log
+2025-01-22 13:57:47,630 INFO    MainThread:20248 [wandb_init.py:_log_setup():534] Logging internal logs to ./experiment_folder/resized\experiment_18_681\wandb\run-20250122_135747-qcvhvyut\logs\debug-internal.log
+2025-01-22 13:57:47,630 INFO    MainThread:20248 [wandb_init.py:init():619] calling init triggers
+2025-01-22 13:57:47,630 INFO    MainThread:20248 [wandb_init.py:init():626] wandb.init called with sweep_config: {}
+config: {}
+2025-01-22 13:57:47,630 INFO    MainThread:20248 [wandb_init.py:init():669] starting backend
+2025-01-22 13:57:47,630 INFO    MainThread:20248 [wandb_init.py:init():673] sending inform_init request
+2025-01-22 13:57:47,632 INFO    MainThread:20248 [backend.py:_multiprocessing_setup():104] multiprocessing start_methods=spawn, using: spawn
+2025-01-22 13:57:47,632 INFO    MainThread:20248 [wandb_init.py:init():686] backend started and connected
+2025-01-22 13:57:47,635 INFO    MainThread:20248 [wandb_init.py:init():781] updated telemetry
+2025-01-22 13:57:47,666 INFO    MainThread:20248 [wandb_init.py:init():814] communicating run to backend with 90.0 second timeout
+2025-01-22 13:57:48,133 INFO    MainThread:20248 [wandb_init.py:init():867] starting run threads in backend
+2025-01-22 13:57:48,258 INFO    MainThread:20248 [wandb_run.py:_console_start():2456] atexit reg
+2025-01-22 13:57:48,258 INFO    MainThread:20248 [wandb_run.py:_redirect():2305] redirect: wrap_raw
+2025-01-22 13:57:48,258 INFO    MainThread:20248 [wandb_run.py:_redirect():2370] Wrapping output streams.
+2025-01-22 13:57:48,259 INFO    MainThread:20248 [wandb_run.py:_redirect():2395] Redirects installed.
+2025-01-22 13:57:48,261 INFO    MainThread:20248 [wandb_init.py:init():911] run started, returning control to user process
+2025-01-22 13:57:48,261 INFO    MainThread:20248 [wandb_run.py:_config_callback():1387] config_cb None None {'config': None, 'save_dir': './experiment_folder/', 'logstep_train': 1, 'save_model': 'both', 'val_every_n_epochs': 3, 'resume': None, 'seed': 12345, 'wandb': True, 'wandb_project': 'DADA-SR', 'dataset': 'resized', 'data_dir': './datafolder/', 'num_workers': 8, 'batch_size': 8, 'crop_size': 256, 'scaling': 8, 'max_rotation': 15.0, 'no_flip': False, 'in_memory': True, 'loss': 'l1', 'num_epochs': 4500, 'lr': 0.01, 'momentum': 0.9, 'w_decay': 1e-05, 'lr_scheduler': 'step', 'lr_step': 100, 'lr_gamma': 0.99, 'skip_first': False, 'gradient_clip': 0.01, 'upscale': 8, 'window_size': 8, 'img_range': 1, 'experiment_name': 'first_experiment'}
+2025-01-22 13:57:57,767 WARNING MsgRouterThr:20248 [router.py:message_loop():75] message_loop has been closed

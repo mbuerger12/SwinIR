@@ -1,0 +1,8 @@
+{"time":"2025-01-22T14:01:02.4454123+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2025-01-22T14:01:02.4454123+01:00","level":"INFO","msg":"created symlink","path":"experiment_folder\\resized\\experiment_21_727\\wandb\\run-20250122_140102-t6saa665\\logs\\debug-core.log"}
+{"time":"2025-01-22T14:01:02.5546779+01:00","level":"INFO","msg":"created new stream","id":"t6saa665"}
+{"time":"2025-01-22T14:01:02.5546779+01:00","level":"INFO","msg":"stream: started","id":"t6saa665"}
+{"time":"2025-01-22T14:01:02.5546779+01:00","level":"INFO","msg":"sender: started","stream_id":"t6saa665"}
+{"time":"2025-01-22T14:01:02.5546779+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"t6saa665"}
+{"time":"2025-01-22T14:01:02.5546779+01:00","level":"INFO","msg":"handler: started","stream_id":"t6saa665"}
+{"time":"2025-01-22T14:01:02.9196924+01:00","level":"INFO","msg":"Starting system monitor"}

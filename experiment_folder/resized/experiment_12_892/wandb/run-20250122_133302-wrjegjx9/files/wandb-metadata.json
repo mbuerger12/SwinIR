@@ -1,0 +1,71 @@
+{
+  "os": "Windows-10-10.0.22631-SP0",
+  "python": "3.9.20",
+  "startedAt": "2025-01-22T12:33:02.975402Z",
+  "args": [
+    "--dataset",
+    "resized",
+    "--data-dir",
+    "./datafolder/",
+    "--save-dir",
+    "./experiment_folder/",
+    "--wandb",
+    "--num-epochs",
+    "4500",
+    "--scaling",
+    "8",
+    "--logstep-train",
+    "1",
+    "--val-every-n-epochs",
+    "3",
+    "--lr",
+    "0.01",
+    "--lr-step",
+    "100",
+    "--in-memory",
+    "--upscale",
+    "8",
+    "--window_size",
+    "8",
+    "--img_range",
+    "1"
+  ],
+  "program": "G:\\SwinIR\\run_train.py",
+  "codePath": "run_train.py",
+  "git": {
+    "remote": "https://github.com/JingyunLiang/SwinIR.git",
+    "commit": "6545850fbf8df298df73d81f3e8cba638787c8bd"
+  },
+  "email": "bumatube@gmail.com",
+  "root": "./experiment_folder/resized\\experiment_12_892",
+  "host": "Max-PC",
+  "username": "maxim",
+  "executable": "G:\\anaconda\\envs\\DADA\\python.exe",
+  "codePathLocal": "run_train.py",
+  "cpu_count": 12,
+  "cpu_count_logical": 24,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "2000395694080",
+      "used": "1533457342464"
+    }
+  },
+  "memory": {
+    "total": "34265083904"
+  },
+  "cpu": {
+    "count": 12,
+    "countLogical": 24
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce RTX 4070 Ti",
+      "memoryTotal": "12878610432",
+      "cudaCores": 7680,
+      "architecture": "Ada"
+    }
+  ],
+  "cudaVersion": "12.7"
+}

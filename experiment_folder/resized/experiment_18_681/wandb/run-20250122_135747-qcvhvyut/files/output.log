@@ -1,0 +1,30 @@
+  0%|          | 0/4500 [00:00<?, ?it/s, best_validationClipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [-0.6170092..1.6313725].
+  0%|          | 0/4500 [00:09<?, ?it/s, best_validation_loss=nan, training_loss=nan, validation_loss=nan]
+Traceback (most recent call last):                      
+  File "G:\SwinIR\run_train.py", line 217, in <module>
+    trainer.train()
+  File "G:\SwinIR\run_train.py", line 64, in train
+    self.train_epoch(tnr)
+  File "G:\SwinIR\run_train.py", line 96, in train_epoch
+    store_images(self.image_folder, self.experiment_name, output, sample["y"])
+  File "G:\SwinIR\utils\helper_functions.py", line 65, in store_images
+    plot_tensor_image(pred, dir_name, title="pred")
+  File "G:\SwinIR\utils\helper_functions.py", line 116, in plot_tensor_image
+    plt.savefig(save_path)
+  File "G:\anaconda\envs\DADA\lib\site-packages\matplotlib\pyplot.py", line 1228, in savefig
+    res = fig.savefig(*args, **kwargs)  # type: ignore[func-returns-value]
+  File "G:\anaconda\envs\DADA\lib\site-packages\matplotlib\figure.py", line 3395, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "G:\anaconda\envs\DADA\lib\site-packages\matplotlib\backend_bases.py", line 2204, in print_figure
+    result = print_method(
+  File "G:\anaconda\envs\DADA\lib\site-packages\matplotlib\backend_bases.py", line 2054, in <lambda>
+    print_method = functools.wraps(meth)(lambda *args, **kwargs: meth(
+  File "G:\anaconda\envs\DADA\lib\site-packages\matplotlib\backends\backend_agg.py", line 496, in print_png
+    self._print_pil(filename_or_obj, "png", pil_kwargs, metadata)
+  File "G:\anaconda\envs\DADA\lib\site-packages\matplotlib\backends\backend_agg.py", line 445, in _print_pil
+    mpl.image.imsave(
+  File "G:\anaconda\envs\DADA\lib\site-packages\matplotlib\image.py", line 1676, in imsave
+    image.save(fname, **pil_kwargs)
+  File "G:\anaconda\envs\DADA\lib\site-packages\PIL\Image.py", line 2600, in save
+    fp = builtins.open(filename, "w+b")
+OSError: [Errno 22] Invalid argument: 'G:\\SwinIR\\eG:\\SwinIR\\save_images\\first_experimentpG:\\SwinIR\\save_images\\first_experimentoG:\\SwinIR\\save_images\\first_experimentcG:\\SwinIR\\save_images\\first_experimenthG:\\SwinIR\\save_images\\first_experiment_G:\\SwinIR\\save_images\\first_experiment-G:\\SwinIR\\save_images\\first_experiment1\\pred.png'
