@@ -104,9 +104,9 @@ class MagicBathyNet(Dataset):
         #preparing guide
         bath = torch.tensor(bath).to(torch.float32)
         guide = bath.to(torch.float32).clone().detach()
-        guide = self.depth_to_rgb(guide)
-        guide = guide.repeat(3, 1, 1)
-        #guide = guide.unsqueeze(0)
+        #guide = self.depth_to_rgb(guide)
+        #guide = guide.repeat(3, 1, 1)
+        guide = guide.unsqueeze(0)
 
         # guide = guide[: , :256, :256]
         #preparing masks -> not used currently
@@ -117,6 +117,7 @@ class MagicBathyNet(Dataset):
         y_bicubic = torch.nn.functional.interpolate(img.to(torch.float32).unsqueeze(0), size=(512, 512), mode='bicubic', align_corners=True).clone().detach()
         y_bicubic = y_bicubic.squeeze(0)
         #y_bicubic = y_bicubic[: , :256, :256]
+        source = torch.cat((y_bicubic, guide), dim=0)
         return {
             'img_path': img_path,
             'guide': guide,
@@ -430,9 +431,6 @@ class MagicBathyNetDataLoader:
                 train_s2.append(s2_path)
                 train_depth.append(depth_path)
 
-        test_aerial = sorted(test_aerial)
-        test_s2 = sorted(test_s2)
-        test_depth = sorted(test_depth)
         train_aerial = sorted(train_aerial)
         train_s2 = sorted(train_s2)
         train_depth = sorted(train_depth)

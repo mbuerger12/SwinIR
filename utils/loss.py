@@ -8,6 +8,9 @@ import torch
 
 def get_loss(output, sample):
     y = sample['y']
+    if output.shape[-1] == 511:
+        y = y[..., :511, :511]
+    #output = output[..., :3, :511, :511]
     l1_loss = l1_loss_func(output, y)
 
 

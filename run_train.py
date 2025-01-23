@@ -13,6 +13,7 @@ from tqdm import tqdm
 import sys
 import wandb
 
+from dataloader.MagicBathy_new import prepare_datasets, create_dataloaders
 from arguments import train_parser
 from models import SwinIR
 from utils.loss import get_loss
@@ -27,7 +28,8 @@ class Trainer:
         self.use_wandb = self.args.wandb
         self.dataloaders = self.get_dataloaders(args)
         self.model = SwinIR(upscale=args.upscale,
-                            img_size=(64, 64),
+                            img_size=(512, 512),
+                            in_chans=4,
                             window_size=args.window_size,
                             img_range=args.img_range,
                             depths=[6,6,6,6],
@@ -89,10 +91,11 @@ class Trainer:
             inner_tnr.set_postfix(training_loss=np.nan)
             for i, sample in enumerate(inner_tnr):
                 self.optimizer.zero_grad()
-                print(next(self.model.parameters()).device)
+                #print(next(self.model.parameters()).device)
                 sample = to_cuda(sample)
 
                 output = self.model(sample['source'])
+                output = output[..., :3, :511, :511]
                 store_images(self.image_folder, self.experiment_name, output, sample["y"])
                 loss = get_loss(output, sample)
 
@@ -184,6 +187,51 @@ class Trainer:
 
 
     def get_dataloaders(self, args):
+        if args.dataset == '':
+            # Suppose these are your known IDs
+            train_ids = {"100", "101", "102"}
+            val_ids = {"110", "111"}
+            test_ids = {"120", "121", "410", "387", "411"}  # or any IDs you want in test
+
+            # Example location-based normalization (as before)
+            location_norm_params = {
+                "agia_napa": {
+                    "s2": (0, 10000),
+                    "aerial": (0, 65535),
+                    "depth": -14.0
+                },
+                "puck_lagoon": {
+                    "s2": (10, 8500),
+                    "aerial": (20, 30000),
+                    "depth": -30.0
+                },
+            }
+            cwd = os.getcwd()
+            s2_subdir = os.path.join("img", "resized_s2")
+            aerial_subdir = os.path.join("img", "aerial")
+            depth_subdir = os.path.join("depth", "aerial")
+            root_dataset_dir = os.path.join(cwd, 'datasets', 'resized')
+            my_locations = ["agia_napa", "puck_lagoon"]
+
+            train_ds, val_ds, test_ds = prepare_datasets(
+                root_dir=root_dataset_dir,
+                locations=my_locations,
+                norm_params=location_norm_params,
+                use_bathymetry=True,
+                s2_subdir=s2_subdir,
+                aerial_subdir=aerial_subdir,
+                depth_subdir=depth_subdir,
+                train_ids=train_ids,
+                val_ids=val_ids,
+                test_ids=test_ids
+            )
+
+            # Then create DataLoaders as usual
+            loaders = create_dataloaders(train_ds, val_ds, test_ds, batch_size=4)
+
+            for batch in loaders["train"]:
+                print(batch["source"].shape, batch["label"].shape)
+                break
 
 
 
