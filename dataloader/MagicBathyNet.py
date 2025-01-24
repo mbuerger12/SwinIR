@@ -24,7 +24,7 @@ class MagicBathyNet(Dataset):
         norm_params (dict): Dictionary with normalization parameters for each location
     """
 
-    def __init__(self, images, labels, bathymetry_images, bathymetry=False, transform=None, target_transform = None, norm_params = None, batch_size=1):
+    def __init__(self, images, labels, bathymetry_images, bathymetry=False, transform=None, target_transform = None, norm_params = None, batch_size=8):
 
         self.images = images
         self.labels = labels
@@ -102,29 +102,27 @@ class MagicBathyNet(Dataset):
         source = img.to(torch.float32).clone().detach()
 
         #preparing guide
-        bath = torch.tensor(bath).to(torch.float32)
+        bath = bath.to(torch.float32).clone().detach()
         guide = bath.to(torch.float32).clone().detach()
         #guide = self.depth_to_rgb(guide)
         #guide = guide.repeat(3, 1, 1)
         guide = guide.unsqueeze(0)
 
         #preparing masks -> not used currently
-        mask_lr = (source != 0).all(dim=0, keepdim=True).float()
-        mask_hr = (~torch.isnan(guide)).float()
+
+        #mask_hr = (~torch.isnan(guide)).float()
 
         #preparing y bicubic with interpolate function
         y_bicubic = torch.nn.functional.interpolate(img.to(torch.float32).unsqueeze(0), size=(512, 512), mode='bicubic', align_corners=True).clone().detach()
         y_bicubic = y_bicubic.squeeze(0)
         #y_bicubic = y_bicubic[: , :256, :256]
         source = torch.cat((y_bicubic, guide), dim=0)
+        mask = (source != 0).all(dim=0, keepdim=True).float()
         return {
             'img_path': img_path,
-            'guide': guide,
             'source': source,
             'y': y,
-            'mask_lr': mask_lr,
-            'y_bicubic': y_bicubic,
-            'mask_hr': mask_hr
+            'mask': mask,
         }
 
 
@@ -325,15 +323,15 @@ class MagicBathyNetDataLoader:
             else:
                 img_dir_s2 = os.path.join(self.root_dir, location, "img", "s2")
                 img_dir_spot6 = os.path.join(self.root_dir, location, "img", "aerial")
-            samples["source"].extend(sorted([os.path.join(img_dir_s2, f) for f in os.listdir(img_dir_s2) if f.endswith(".tif") and "410" in f]))
-            samples["y"].extend(sorted([os.path.join(img_dir_spot6, f) for f in os.listdir(img_dir_spot6) if f.endswith(".tif") and "410" in f]))
-            samples["guide"].extend(sorted([os.path.join(img_dir_bath, f) for f in os.listdir(img_dir_bath) if f.endswith(".tif") and "410" in f]))
+            samples["source"].extend(sorted([os.path.join(img_dir_s2, f) for f in os.listdir(img_dir_s2) if f.endswith(".tif") ]))
+            samples["y"].extend(sorted([os.path.join(img_dir_spot6, f) for f in os.listdir(img_dir_spot6) if f.endswith(".tif") ]))
+            samples["guide"].extend(sorted([os.path.join(img_dir_bath, f) for f in os.listdir(img_dir_bath) if f.endswith(".tif") ]))
         return samples
-
 
     def _prepare_datasets(self):
         samples = self._load_samples()
 
+        # Define test IDs
         agia_napa_test_ids = {'411', '387', '410', '398', '370', '369', '397'}
         puck_lagoon_test_ids = {'2987', '2707', '840', '293', '1510', '2667', '1720', '877', '1878', '3156', '358', '1829', '1121', '1044',
                                 '1274', '1107', '2814', '760', '2938', '253', '2647', '1760', '1848', '2065', '1983', '1176', '1408',
@@ -377,80 +375,52 @@ class MagicBathyNetDataLoader:
                                 '3207', '2612', '2783', '2192', '600', '950', '1690', '857', '101', '3187', '381', '435', '162', '1368',
                                 '2058', '1046', '251', '249', '1075', '2642', '1292', '1167', '1975', '2778', '1079', '634', '1215', '1356'}
 
-        """
-        for s2_path, aerial_path, depth_path in zip(samples["s2"], samples["aerial"], samples["depth"]):
-            img_name = os.path.basename(aerial_path)
-            img_id = img_name.split('_')[1].split('.')[0]
-
-            if "agia_napa" in aerial_path and img_id in agia_napa_test_ids:
-                test_aerial.append(aerial_path)
-                test_s2.append(s2_path)
-                test_depth.append(depth_path)
-            elif "puck_lagoon" in aerial_path and img_id in puck_lagoon_test_ids:
-                test_aerial.append(aerial_path)
-                test_s2.append(s2_path)
-                test_depth.append(depth_path)
-            else:
-                train_aerial.append(aerial_path)
-                train_s2.append(s2_path)
-                train_depth.append(depth_path)
-        """
-        # Create dictionaries to index files by their identifiers
+        # Create dictionaries to map IDs to file paths
         aerial_dict = {os.path.basename(path).split('_')[1].split('.')[0]: path for path in samples["y"]}
         s2_dict = {os.path.basename(path).split('_')[1].split('.')[0]: path for path in samples["source"]}
-        depth_dict = {os.path.basename(path).split('_')[2].split('.')[0]: path for path in samples["guide"]}  # TODO: .split('_')[2] if agia_napa
+        depth_dict = {os.path.basename(path).split('_')[2].split('.')[0]: path for path in samples["guide"]}
 
-        # Find common identifiers
+        # Find common IDs among the datasets
         common_ids = set(aerial_dict.keys()) & set(s2_dict.keys()) & set(depth_dict.keys())
 
-        # Initialize train/test splits
+        # Initialize splits
         train_aerial, train_s2, train_depth = [], [], []
         test_aerial, test_s2, test_depth = [], [], []
+
+        # Distribute samples into train and test datasets
         for img_id in common_ids:
             aerial_path = aerial_dict[img_id]
             s2_path = s2_dict[img_id]
             depth_path = depth_dict[img_id]
 
-            # Split based on dataset and test IDs
             if "agia_napa" in aerial_path and img_id in agia_napa_test_ids:
                 test_aerial.append(aerial_path)
                 test_s2.append(s2_path)
                 test_depth.append(depth_path)
-                #for testing
-                train_aerial.append(aerial_path)
-                train_s2.append(s2_path)
-                train_depth.append(depth_path)
             elif "puck_lagoon" in aerial_path and img_id in puck_lagoon_test_ids:
                 test_aerial.append(aerial_path)
                 test_s2.append(s2_path)
                 test_depth.append(depth_path)
-
             else:
                 train_aerial.append(aerial_path)
                 train_s2.append(s2_path)
                 train_depth.append(depth_path)
 
-        train_aerial = sorted(train_aerial)
-        train_s2 = sorted(train_s2)
-        train_depth = sorted(train_depth)
-        """
-        images_s2_train, images_s2_val, images_aerial_train, images_aerial_val, depth_train, depth_val = train_test_split(train_s2, train_aerial, train_depth, test_size=self.val_size, random_state=65)
+        # Split train dataset into train and validation sets
+        images_s2_train, images_s2_val, images_aerial_train, images_aerial_val, depth_train, depth_val = train_test_split(
+            train_s2, train_aerial, train_depth, test_size=self.val_size, random_state=65
+        )
 
+        # Construct dataset objects
         datasets = {
             "train": MagicBathyNet(images_s2_train, images_aerial_train, depth_train, self.bathymetry, self.transform, self.target_trans, self.norm_params),
             "val": MagicBathyNet(images_s2_val, images_aerial_val, depth_val, self.bathymetry, self.transform, self.target_trans, self.norm_params),
             "test": MagicBathyNet(test_s2, test_aerial, test_depth, self.bathymetry, self.transform, self.target_trans, self.norm_params)
         }
-        """
-        datasets = {
-            "train": MagicBathyNet(train_s2, train_aerial, train_depth, self.bathymetry, self.transform, self.target_trans, self.norm_params),
-            "val": MagicBathyNet(train_s2, train_aerial, train_depth, self.bathymetry, self.transform, self.target_trans, self.norm_params),
-            "test": MagicBathyNet(train_s2, train_aerial, train_depth, self.bathymetry, self.transform, self.target_trans, self.norm_params)
-        }
+
         phases = "train", "val", "test"
         return {phase: DataLoader(datasets[phase], batch_size=self.batch_size, num_workers=self.num_workers,
-                shuffle=True, drop_last=False) for phase in phases}
-        #return datasets
+                                  shuffle=True, drop_last=False) for phase in phases}
 
 
     def get_dataloader(self, set_type="train"):
