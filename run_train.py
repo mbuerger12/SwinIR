@@ -13,7 +13,6 @@ from tqdm import tqdm
 import sys
 import wandb
 
-from dataloader.MagicBathy_new import prepare_datasets, create_dataloaders
 from arguments import train_parser
 from models import SwinIR
 from utils.loss import get_loss
@@ -95,7 +94,7 @@ class Trainer:
                 sample = to_cuda(sample)
 
                 output = self.model(sample['source'])
-                output = output[..., :3, :511, :511]
+                #output = output[..., :3, :511, :511]
                 store_images(self.image_folder, self.experiment_name, output, sample["y"])
                 loss = get_loss(output, sample)
 

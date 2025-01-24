@@ -73,13 +73,13 @@ class MagicBathyNet(Dataset):
 
         img = (img - norm_param_s2[0]) / (norm_param_s2[1] - norm_param_s2[0])
         label = (label - norm_param_aerial[0]) / (norm_param_aerial[1] - norm_param_aerial[0])
-        #bath = bath / norm_param_depth
+        bath = bath / norm_param_depth
 
 
         img = img[..., [2, 1, 0]] if "agia_napa" in img_path else img
         img = img.transpose(2, 0, 1)
         img = torch.clamp(torch.tensor(img), 0, 1)
-        #bath = torch.clamp(torch.tensor(bath), 0, 1)
+        bath = torch.clamp(torch.tensor(bath), 0, 1)
         #print(f"imgmin {img.min()} imgmax {img.max()} label {label.min()} label {label.max()} bath {bath.min()} bath {bath.max()}")
 
         # Swap from BGR to RGB
@@ -97,10 +97,10 @@ class MagicBathyNet(Dataset):
         #preparing y
         label = label.transpose(2, 0, 1)
         y = torch.tensor(label).to(torch.float32)
-        #y = y[: , :256, :256]
+
         #preparing source
         source = img.to(torch.float32).clone().detach()
-        #source = source[: , :32, :32]
+
         #preparing guide
         bath = torch.tensor(bath).to(torch.float32)
         guide = bath.to(torch.float32).clone().detach()
@@ -108,7 +108,6 @@ class MagicBathyNet(Dataset):
         #guide = guide.repeat(3, 1, 1)
         guide = guide.unsqueeze(0)
 
-        # guide = guide[: , :256, :256]
         #preparing masks -> not used currently
         mask_lr = (source != 0).all(dim=0, keepdim=True).float()
         mask_hr = (~torch.isnan(guide)).float()
