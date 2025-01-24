@@ -108,21 +108,19 @@ class MagicBathyNet(Dataset):
         #guide = guide.repeat(3, 1, 1)
         guide = guide.unsqueeze(0)
 
-        #preparing masks -> not used currently
-
-        #mask_hr = (~torch.isnan(guide)).float()
-
         #preparing y bicubic with interpolate function
         y_bicubic = torch.nn.functional.interpolate(img.to(torch.float32).unsqueeze(0), size=(512, 512), mode='bicubic', align_corners=True).clone().detach()
         y_bicubic = y_bicubic.squeeze(0)
         #y_bicubic = y_bicubic[: , :256, :256]
         source = torch.cat((y_bicubic, guide), dim=0)
-        mask = (source != 0).all(dim=0, keepdim=True).float()
+        #mask_source = (y_bicubic != 0).all(dim=0, keepdim=True).float()
+        mask_label = (y != 0).all(dim=0, keepdim=True).float()
+        print(img_path, mask_source.min(), mask_source.max(), mask_label.min(), mask_label.max())
         return {
             'img_path': img_path,
             'source': source,
             'y': y,
-            'mask': mask,
+            'maks_label': mask_label,
         }
 
 

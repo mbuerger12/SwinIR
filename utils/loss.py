@@ -8,7 +8,7 @@ import torch
 
 def get_loss(output, sample):
     y = sample['y']
-    mask = sample['mask']
+    mask = sample['maks_label']
     l1_loss = l1_loss_func(output, y, mask)
 
 
