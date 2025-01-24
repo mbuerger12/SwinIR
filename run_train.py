@@ -92,6 +92,7 @@ class Trainer:
                 self.optimizer.zero_grad()
                 #print(next(self.model.parameters()).device)
                 sample = to_cuda(sample)
+                print(sample['source'].size())
 
                 output = self.model(sample['source'])
                 store_images(self.image_folder, self.experiment_name, output, sample["y"])
@@ -137,7 +138,6 @@ class Trainer:
 
         with torch.no_grad():
             for sample in tqdm(self.dataloaders.datasets['val'], leave=False):
-
                 sample = to_cuda(sample)
                 output = self.model(sample['source'])
                 loss = get_loss(output, sample)

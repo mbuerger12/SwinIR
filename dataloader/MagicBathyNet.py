@@ -24,7 +24,7 @@ class MagicBathyNet(Dataset):
         norm_params (dict): Dictionary with normalization parameters for each location
     """
 
-    def __init__(self, images, labels, bathymetry_images, bathymetry=False, transform=None, target_transform = None, norm_params = None, batch_size=8):
+    def __init__(self, images, labels, bathymetry_images, bathymetry=False, transform=None, target_transform = None, norm_params = None, batch_size=1):
 
         self.images = images
         self.labels = labels
@@ -115,7 +115,7 @@ class MagicBathyNet(Dataset):
         source = torch.cat((y_bicubic, guide), dim=0)
         #mask_source = (y_bicubic != 0).all(dim=0, keepdim=True).float()
         mask_label = (y != 0).all(dim=0, keepdim=True).float()
-        print(img_path, mask_source.min(), mask_source.max(), mask_label.min(), mask_label.max())
+        mask_label = mask_label.repeat(3, 1, 1)
         return {
             'img_path': img_path,
             'source': source,
