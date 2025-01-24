@@ -94,7 +94,6 @@ class Trainer:
                 sample = to_cuda(sample)
 
                 output = self.model(sample['source'])
-                #output = output[..., :3, :511, :511]
                 store_images(self.image_folder, self.experiment_name, output, sample["y"])
                 loss = get_loss(output, sample)
 
