@@ -14,6 +14,9 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 from matplotlib.colors import Normalize
 import torch.nn.functional as F
+from torchvision.transforms.functional import crop
+from torchvision.transforms import RandomCrop
+
 
 class MagicBathyNet(Dataset):
     """
@@ -26,7 +29,7 @@ class MagicBathyNet(Dataset):
         norm_params (dict): Dictionary with normalization parameters for each location
     """
 
-    def __init__(self, images, labels, bathymetry_images, bathymetry=False, transform=None, target_transform = None, norm_params = None, batch_size=1):
+    def __init__(self, images, labels, bathymetry_images, bathymetry=False, transform=False, target_transform = None, norm_params = None, batch_size=1):
 
         self.images = images
         self.labels = labels
@@ -73,7 +76,7 @@ class MagicBathyNet(Dataset):
 
         img = img[..., [2, 1, 0]] if "agia_napa" in img_path else img
         img = img.transpose(2, 0, 1)
-        img = torch.clamp(torch.tensor(img), 0, 1)
+
         #bath = torch.clamp(torch.tensor(bath), 0, 1)
         bath_hr = torch.from_numpy(bath).float().unsqueeze(0).unsqueeze(0)
         bath_lr = F.interpolate(
@@ -82,9 +85,20 @@ class MagicBathyNet(Dataset):
             mode='bicubic',  # Or 'bilinear', 'area', etc.
             align_corners=False
         )
+        label = label.transpose(2, 0, 1)
+        label_hr = torch.from_numpy(label).float().unsqueeze(0)
+        label = F.interpolate(
+            label_hr,
+            size=(256, 256),  # Desired output resolution
+            mode='bicubic',  # Or 'bilinear', 'area', etc.
+            align_corners=False
+        )
+        label = label.squeeze(0)
         bath_lr = bath_lr.squeeze(0)
         bath = bath_lr / norm_param_depth
         bath = torch.tensor(bath)
+        img = torch.clamp(torch.tensor(img), 0, 1)
+        bath = torch.clamp(torch.tensor(bath), 0, 1)
         # Swap from BGR to RGB
 
         """
@@ -98,7 +112,7 @@ class MagicBathyNet(Dataset):
             #label = self.transform(label)
         """
         #preparing y
-        label = label.transpose(2, 0, 1)
+
         y = torch.tensor(label).to(torch.float32)
 
         #preparing source
@@ -119,6 +133,8 @@ class MagicBathyNet(Dataset):
         source = source.to(torch.float32).clone().detach()
         mask_label = (y != 0).all(dim=0, keepdim=True).float()
         mask_label = mask_label.repeat(3, 1, 1)
+        if self.transform:
+            source, y, mask_label = self.apply_random_crop(source, label, 32, 4, mask_label)
         return {
             'img_path': img_path,
             'source': source,
@@ -126,6 +142,16 @@ class MagicBathyNet(Dataset):
             'maks_label': mask_label,
         }
 
+    def apply_random_crop(self, img, label, crop_size, upscale_factor, mask):
+        _, h, w = img.shape
+
+        # Random crop
+        i, j, h, w = RandomCrop.get_params(img, output_size=(crop_size, crop_size),)
+        img = crop(img, i, j, h, w)
+        i_r, j_r, h_r, w_r = i* upscale_factor, j* upscale_factor, h* upscale_factor, w * upscale_factor
+        label = crop(label, i_r, j_r, h_r, w_r)
+        mask = crop(mask, i_r, j_r, h_r, w_r)
+        return img, label, mask
 
     def depth_to_rgb(self, depth_image, colormap='viridis'):
         """

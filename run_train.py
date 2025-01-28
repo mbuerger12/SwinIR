@@ -29,11 +29,12 @@ class Trainer:
         self.model = SwinIR(upscale=args.upscale,
                             img_size=(64, 64),
                             in_chans=4,
+                            patch_size=1,
                             window_size=args.window_size,
                             img_range=args.img_range,
-                            depths=[6,6,6,6],
-                            embed_dim=60,
-                            num_heads=[6, 6, 6, 6],
+                            depths=[8,8,8,8],
+                            embed_dim=96,
+                            num_heads=[8, 8, 8, 8],
                             upsampler='pixelshuffle').cuda()
         #self.img_store = args.img_store
         if self.use_wandb:
@@ -89,11 +90,10 @@ class Trainer:
             inner_tnr.set_postfix(training_loss=np.nan)
             for i, sample in enumerate(inner_tnr):
                 self.optimizer.zero_grad()
-                #print(next(self.model.parameters()).device)
                 sample = to_cuda(sample)
+
                 output = self.model(sample['source'])
-                output = output[..., :3, :512, :512]
-                print(output.size())
+
                 store_images(self.image_folder, self.experiment_name, output, sample["y"], self.epoch)
                 loss = get_loss(output, sample)
 
@@ -140,7 +140,7 @@ class Trainer:
                 sample = to_cuda(sample)
 
                 output = self.model(sample['source'])
-                output = output[..., :3, :512, :512]
+
                 loss = get_loss(output, sample)
                 self.val_stats["loss"] += loss.detach().cpu().item()
 

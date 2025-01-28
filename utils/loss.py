@@ -12,7 +12,7 @@ def get_loss(output, sample):
     l1_loss = l1_loss_func(output, y, mask)
 
 
-    loss = l1_loss
+    loss = l1_loss * 10
     return loss
 
 
