@@ -17,5 +17,5 @@ def get_loss(output, sample):
 
 
 def l1_loss_func(pred, gt, mask):
-    # return F.l1_loss(pred[mask == 1.], gt[mask == 1.])
     return F.l1_loss(pred[mask == 1.], gt[mask == 1.])
+    #return F.l1_loss(pred, gt)

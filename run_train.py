@@ -27,15 +27,14 @@ class Trainer:
         self.use_wandb = self.args.wandb
         self.dataloaders = self.get_dataloaders(args)
         self.model = SwinIR(upscale=args.upscale,
-                            img_size=(512, 512),
+                            img_size=(64, 64),
                             in_chans=4,
                             window_size=args.window_size,
                             img_range=args.img_range,
                             depths=[6,6,6,6],
                             embed_dim=60,
                             num_heads=[6, 6, 6, 6],
-                            mlp_ratio=2,
-                            upsampler='pixelshuffledirect').cuda()
+                            upsampler='pixelshuffle').cuda()
         #self.img_store = args.img_store
         if self.use_wandb:
             self.experiment_folder = new_log(os.path.join(args.save_dir, args.dataset),
@@ -92,10 +91,10 @@ class Trainer:
                 self.optimizer.zero_grad()
                 #print(next(self.model.parameters()).device)
                 sample = to_cuda(sample)
-                print(sample['source'].size())
-
                 output = self.model(sample['source'])
-                store_images(self.image_folder, self.experiment_name, output, sample["y"])
+                output = output[..., :3, :512, :512]
+                print(output.size())
+                store_images(self.image_folder, self.experiment_name, output, sample["y"], self.epoch)
                 loss = get_loss(output, sample)
 
                 if torch.isnan(loss):
@@ -139,7 +138,9 @@ class Trainer:
         with torch.no_grad():
             for sample in tqdm(self.dataloaders.datasets['val'], leave=False):
                 sample = to_cuda(sample)
+
                 output = self.model(sample['source'])
+                output = output[..., :3, :512, :512]
                 loss = get_loss(output, sample)
                 self.val_stats["loss"] += loss.detach().cpu().item()
 

@@ -13,6 +13,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate
 from matplotlib.colors import Normalize
+import torch.nn.functional as F
+
 class MagicBathyNet(Dataset):
     """
     Dataset class for Sentinel-2 and SPOT-6 images
@@ -54,14 +56,8 @@ class MagicBathyNet(Dataset):
         img = tifffile.imread(img_path).astype(np.float32)
         label = tifffile.imread(label_path).astype(np.float32)
         bath = tifffile.imread(bath_path).astype(np.float32)
-        #bath = torch.tensor(bath)
-        test_setup = True
-        test_image = "410"
-        if test_setup == True:
-            norm_param_s2 = self.norm_params["s2_an"]
-            norm_param_aerial = self.norm_params["aerial_an"]
-            norm_param_depth = -14
-        elif "agia_napa" in img_path:
+
+        if "agia_napa" in img_path:
             norm_param_s2 = self.norm_params["s2_an"]
             norm_param_aerial = self.norm_params["aerial_an"]
             norm_param_depth = -30.443
@@ -73,15 +69,22 @@ class MagicBathyNet(Dataset):
 
         img = (img - norm_param_s2[0]) / (norm_param_s2[1] - norm_param_s2[0])
         label = (label - norm_param_aerial[0]) / (norm_param_aerial[1] - norm_param_aerial[0])
-        bath = bath / norm_param_depth
 
 
         img = img[..., [2, 1, 0]] if "agia_napa" in img_path else img
         img = img.transpose(2, 0, 1)
         img = torch.clamp(torch.tensor(img), 0, 1)
-        bath = torch.clamp(torch.tensor(bath), 0, 1)
-        #print(f"imgmin {img.min()} imgmax {img.max()} label {label.min()} label {label.max()} bath {bath.min()} bath {bath.max()}")
-
+        #bath = torch.clamp(torch.tensor(bath), 0, 1)
+        bath_hr = torch.from_numpy(bath).float().unsqueeze(0).unsqueeze(0)
+        bath_lr = F.interpolate(
+            bath_hr,
+            size=(64, 64),  # Desired output resolution
+            mode='bicubic',  # Or 'bilinear', 'area', etc.
+            align_corners=False
+        )
+        bath_lr = bath_lr.squeeze(0)
+        bath = bath_lr / norm_param_depth
+        bath = torch.tensor(bath)
         # Swap from BGR to RGB
 
         """
@@ -99,21 +102,21 @@ class MagicBathyNet(Dataset):
         y = torch.tensor(label).to(torch.float32)
 
         #preparing source
-        source = img.to(torch.float32).clone().detach()
 
         #preparing guide
         bath = bath.to(torch.float32).clone().detach()
         guide = bath.to(torch.float32).clone().detach()
         #guide = self.depth_to_rgb(guide)
         #guide = guide.repeat(3, 1, 1)
-        guide = guide.unsqueeze(0)
+
 
         #preparing y bicubic with interpolate function
-        y_bicubic = torch.nn.functional.interpolate(img.to(torch.float32).unsqueeze(0), size=(512, 512), mode='bicubic', align_corners=True).clone().detach()
-        y_bicubic = y_bicubic.squeeze(0)
-        #y_bicubic = y_bicubic[: , :256, :256]
-        source = torch.cat((y_bicubic, guide), dim=0)
-        #mask_source = (y_bicubic != 0).all(dim=0, keepdim=True).float()
+        #y_bicubic = torch.nn.functional.interpolate(img.to(torch.float32).unsqueeze(0), size=(512, 512), mode='bicubic', align_corners=False).clone().detach()
+        #y_bicubic = y_bicubic.squeeze(0)
+        #guide = guide.unsqueeze(0)
+        #source = torch.cat((y_bicubic, guide), dim=0)
+        source = torch.cat((img, guide), dim=0)
+        source = source.to(torch.float32).clone().detach()
         mask_label = (y != 0).all(dim=0, keepdim=True).float()
         mask_label = mask_label.repeat(3, 1, 1)
         return {
