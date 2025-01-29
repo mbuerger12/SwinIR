@@ -17,7 +17,7 @@ from arguments import train_parser
 from models import SwinIR
 from utils.loss import get_loss
 from utils.helper_functions import to_cuda, new_log, store_images
-
+from dataloader.MagicBathy_new import MagicBathyNetDataLoader
 from dataloader import MagicBathyNet
 
 
@@ -86,7 +86,7 @@ class Trainer:
         self.train_stats = defaultdict(float)
 
         self.model.train()
-        with tqdm(self.dataloaders.datasets['train'], leave=False) as inner_tnr:
+        with tqdm(self.dataloaders.dataloaders['train'], leave=False) as inner_tnr:
             inner_tnr.set_postfix(training_loss=np.nan)
             for i, sample in enumerate(inner_tnr):
                 self.optimizer.zero_grad()
@@ -136,7 +136,7 @@ class Trainer:
         self.model.eval()
 
         with torch.no_grad():
-            for sample in tqdm(self.dataloaders.datasets['val'], leave=False):
+            for sample in tqdm(self.dataloaders.dataloaders['val'], leave=False):
                 sample = to_cuda(sample)
 
                 output = self.model(sample['source'])
@@ -186,53 +186,31 @@ class Trainer:
 
 
     def get_dataloaders(self, args):
-        if args.dataset == '':
-            # Suppose these are your known IDs
-            train_ids = {"100", "101", "102"}
-            val_ids = {"110", "111"}
-            test_ids = {"120", "121", "410", "387", "411"}  # or any IDs you want in test
-
-            # Example location-based normalization (as before)
-            location_norm_params = {
-                "agia_napa": {
-                    "s2": (0, 10000),
-                    "aerial": (0, 65535),
-                    "depth": -14.0
-                },
-                "puck_lagoon": {
-                    "s2": (10, 8500),
-                    "aerial": (20, 30000),
-                    "depth": -30.0
-                },
+        if args.dataset == 'resized':
+            norm_params = {
+                "s2_an": np.load("./datasets/resized/agia_napa/norm_param_s2_an.npy"),
+                "aerial_an": np.load("./datasets/resized/agia_napa/norm_param_aerial_an.npy"),
+                #"s2_pl": np.load("./datasets/resized/puck_lagoon/norm_param_s2_pl.npy"),
+                #"aerial_pl": np.load("./datasets/resized/puck_lagoon/norm_param_aerial_pl.npy"),
             }
-            cwd = os.getcwd()
-            s2_subdir = os.path.join("img", "resized_s2")
-            aerial_subdir = os.path.join("img", "aerial")
-            depth_subdir = os.path.join("depth", "aerial")
-            root_dataset_dir = os.path.join(cwd, 'datasets', 'resized')
-            my_locations = ["agia_napa", "puck_lagoon"]
 
-            train_ds, val_ds, test_ds = prepare_datasets(
-                root_dir=root_dataset_dir,
-                locations=my_locations,
-                norm_params=location_norm_params,
-                use_bathymetry=True,
-                s2_subdir=s2_subdir,
-                aerial_subdir=aerial_subdir,
-                depth_subdir=depth_subdir,
-                train_ids=train_ids,
-                val_ids=val_ids,
-                test_ids=test_ids
+            data_module = MagicBathyNetDataLoader(
+                root_dir=os.path.join(os.getcwd(),"datasets", "resized"),
+                locations=["agia_napa"],
+                norm_params=norm_params,
+                bathymetry=True,
+                batch_size=4,
+                num_workers=4,
+                test_size=0.15,
+                val_size=0.15,
+                num_patches_per_image=40  # sample 10 patches per real image
             )
 
-            # Then create DataLoaders as usual
-            loaders = create_dataloaders(train_ds, val_ds, test_ds, batch_size=4)
+            train_loader = data_module.dataloaders["train"]
+            val_loader = data_module.dataloaders["val"]
+            test_loader = data_module.dataloaders["test"]
 
-            for batch in loaders["train"]:
-                print(batch["source"].shape, batch["label"].shape)
-                break
-
-
+            return data_module
 
         if args.dataset == 'resized':
             path_to_images = os.path.join('.', 'datasets', 'resized', 'agia_napa', 'img', 's2')
