@@ -12,6 +12,8 @@ from torchvision.transforms import Normalize
 from tqdm import tqdm
 import sys
 import wandb
+import random
+
 
 from arguments import train_parser
 from models import SwinIR
@@ -93,8 +95,8 @@ class Trainer:
                 sample = to_cuda(sample)
 
                 output = self.model(sample['source'])
-
-                store_images(self.image_folder, self.experiment_name, output, sample["y"], self.epoch)
+                if random.randint(0, 250) == 42:
+                    store_images(self.image_folder, self.experiment_name, output, sample["y"], self.epoch)
                 loss = get_loss(output, sample)
 
                 if torch.isnan(loss):
