@@ -57,62 +57,69 @@ def write_params(params, path):
         for data in params.items():
             writer.writerow([el for el in data])
 
-def store_images(image_folder, experiment_folder, pred, label):
-    experiment_folder = os.path.join(image_folder, experiment_folder)
-    if not os.path.exists(experiment_folder):
-        os.mkdir(experiment_folder)
-    dir_name = os.path.join(experiment_folder, f"epoch_{str(len(os.listdir(experiment_folder)))}")
-    os.mkdir(dir_name)
-    plot_tensor_image(pred, dir_name, title="pred")
-    plot_tensor_image(label, dir_name, title="y")
-
-
-def plot_tensor_image(img_tensor, path, title="Image", cmap="viridis", slice_idx=0, ):
+def store_images(image_folder, experiment_folder, pred, label, epoch):
     """
-    Plots the given image tensor.
+    Stores the label and multiple predictions in an epoch-specific subfolder:
+    <image_folder>/<experiment_folder>/epoch_{epoch}/
 
-    Parameters:
-        img_tensor (torch.Tensor): The tensor to plot. Shape can be
-            (N, C, H, W), (C, H, W), (H, W), or (1, C, H, W).
-        title (str): Title of the plot.
-        cmap (str): Colormap for grayscale images (default: 'viridis').
-        slice_idx (int): The index of the slice to plot if the input has multiple slices (default: 0).
+    Args:
+        image_folder (str): Base folder where images are stored.
+        experiment_folder (str): Name of the specific experiment folder.
+        preds (list or tuple of torch.Tensor): Multiple prediction tensors.
+        label (torch.Tensor): Label tensor.
+        epoch (int): Current epoch number.
     """
-    # Handle batch dimension (N, C, H, W) or (1, C, H, W)
-    if len(img_tensor.shape) == 4 and img_tensor.shape[0] == 1:  # Single batch
-        img_tensor = img_tensor[0]  # Remove batch dimension
+    # 1. Create the base experiment folder
+    experiment_path = os.path.join(image_folder, experiment_folder)
+    os.makedirs(experiment_path, exist_ok=True)
 
-    if len(img_tensor.shape) == 4:  # Batch of channels (C, H, W)
-        # Select the specified slice along the channel dimension
+    # 2. Create the epoch-specific directory: e.g., "epoch_0", "epoch_1", etc.
+    epoch_dir = os.path.join(experiment_path, f"epoch_{epoch}")
+    os.makedirs(epoch_dir, exist_ok=True)
+
+    # 3. Store the label
+    index = str(len(os.listdir(epoch_dir)))
+    plot_tensor_image(label, epoch_dir, title=f"label_{index}")
+
+    # 4. Loop over predictions and store each one
+    plot_tensor_image(pred, epoch_dir, title=f"prediction_{index}")
+
+
+def plot_tensor_image(img_tensor, path, title="Image", cmap="viridis", slice_idx=0):
+    """
+    Plots the given image tensor and saves it as a PNG to the given path.
+    """
+    # Handle batch dimension
+    if len(img_tensor.shape) == 4 and img_tensor.shape[0] == 1:
+        # (1, C, H, W) => (C, H, W)
+        img_tensor = img_tensor[0]
+
+    if len(img_tensor.shape) == 4:
+        # For (N, C, H, W) with N>1, pick a slice_idx if needed
         if slice_idx < 0 or slice_idx >= img_tensor.shape[0]:
-            raise ValueError(f"Invalid slice_idx {slice_idx} for tensor with shape {img_tensor.shape}")
-        img_tensor = img_tensor[slice_idx]  # Select the desired channel
+            raise ValueError(f"Invalid slice_idx {slice_idx} for shape {img_tensor.shape}")
+        img_tensor = img_tensor[slice_idx]
 
-    # Move tensor to CPU and convert to NumPy
+    # Convert tensor to numpy on CPU
     img = img_tensor.detach().cpu().numpy()
 
-    # Handle different shapes
-    if len(img.shape) == 3:  # Multi-channel image (C, H, W)
-        img = img.transpose(1, 2, 0)  # Convert to (H, W, C)
-        if img.shape[2] == 1:  # Single channel, convert to 2D
-            img = img.squeeze(-1)
+    # If the shape is (C, H, W) => convert to (H, W, C)
+    if len(img.shape) == 3 and img.shape[0] in [1, 3]:
+        img = img.transpose(1, 2, 0)  # (C, H, W) => (H, W, C)
 
-    elif len(img.shape) != 2:  # If not (H, W) or (H, W, C), raise error
-        raise ValueError(f"Unsupported tensor shape after processing: {img_tensor.shape}")
-    """
-    # Normalize image for display if needed
-    if img.max() > 1 or img.min() < 0:
-        img = (img - img.min()) / (img.max() - img.min())
-    """
-    # Plot the image
+        # If single channel, squeeze out
+        if img.shape[-1] == 1:
+            img = img[..., 0]
+
     plt.figure(figsize=(6, 6))
-    if len(img.shape) == 2:  # Grayscale image
+    if len(img.shape) == 2:
         plt.imshow(img, cmap=cmap)
-    else:  # RGB image
+    else:
         plt.imshow(img)
     plt.title(title)
     plt.axis("off")
 
-    save_path = os.path.join(path, title) + ".png"
+    # Save
+    save_path = os.path.join(path, f"{title}.png")
     plt.savefig(save_path)
-    plt.show()
+    plt.close()  # close the figure to free memory

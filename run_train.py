@@ -212,7 +212,7 @@ class Trainer:
 
             return data_module
 
-        if args.dataset == 'resized':
+        if args.dataset == '':
             path_to_images = os.path.join('.', 'datasets', 'resized', 'agia_napa', 'img', 's2')
             path_to_images = [os.path.join(path_to_images, x) for x in os.listdir(path_to_images)]
             path_to_labels = os.path.join('.', 'datasets', 'resized', 'agia_napa', 'img','aerial')
