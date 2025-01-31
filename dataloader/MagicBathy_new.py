@@ -104,6 +104,7 @@ class MagicBathyDataset(Dataset):
         self.images = images
         self.labels = labels
         self.bathymetry_images = bathymetry_images
+        self.crop = False
 
         self.norm_params = norm_params
         self.bathymetry = bathymetry
@@ -191,8 +192,8 @@ class MagicBathyDataset(Dataset):
 
         # Optionally resize to some standard shape if you want (like 64×64 for LR, 256×256 for HR)
         # e.g.:
-        lr_size = (64, 64)
-        hr_size = (256, 256)
+        lr_size = (128, 128)
+        hr_size = (128, 128)
 
         # S2 LR
         img_tensor = F.interpolate(
@@ -200,6 +201,7 @@ class MagicBathyDataset(Dataset):
         ).squeeze(0)
 
         # Aerial HR
+
         label_tensor = F.interpolate(
             label_tensor.unsqueeze(0), size=hr_size, mode="bicubic", align_corners=False
         ).squeeze(0)
@@ -230,25 +232,26 @@ class MagicBathyDataset(Dataset):
         # -------------------------------------------------
         # If you want a random patch from LR  => e.g. 32×32
         # and from HR => 32*4 => 128×128
-        lr_cropped, hr_cropped, mask_cropped = apply_random_crop_lr_hr(
-            lr_tensor=source_tensor,
-            hr_tensor=label_tensor,
-            mask_tensor=mask_label,
-            lowres_crop_size=self.lowres_crop_size,
-            upscale_factor=self.upscale_factor
-        )
+        if self.crop == True:
+            source_tensor, label_tensor, mask_label = apply_random_crop_lr_hr(
+                lr_tensor=source_tensor,
+                hr_tensor=label_tensor,
+                mask_tensor=mask_label,
+                lowres_crop_size=self.lowres_crop_size,
+                upscale_factor=self.upscale_factor
+            )
 
         # Apply optional transforms
         if self.transform:
-            lr_cropped = self.transform(lr_cropped)
+            lr_cropped = self.transform(source_tensor)
         if self.target_transform:
-            hr_cropped = self.target_transform(hr_cropped)
+            hr_cropped = self.target_transform(label_tensor)
 
         return {
             "img_path": img_path,
-            "source": lr_cropped,   # shape => [C, H, W], either 3 or 4 channels
-            "y": hr_cropped,        # shape => [C, H*scale, W*scale]
-            "mask_label": mask_cropped
+            "source": source_tensor,   # shape => [C, H, W], either 3 or 4 channels
+            "y": label_tensor,        # shape => [C, H*scale, W*scale]
+            "mask_label": mask_label
         }
 
 

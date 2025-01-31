@@ -29,15 +29,15 @@ class Trainer:
         self.use_wandb = self.args.wandb
         self.dataloaders = self.get_dataloaders(args)
         self.model = SwinIR(upscale=args.upscale,
-                            img_size=(64, 64),
+                            img_size=(128, 128),
                             in_chans=4,
                             patch_size=1,
                             window_size=args.window_size,
                             img_range=args.img_range,
-                            depths=[8,8,8,8],
-                            embed_dim=96,
-                            num_heads=[8, 8, 8, 8],
-                            upsampler='pixelshuffle').cuda()
+                            depths=[6,6,6,6],
+                            embed_dim=60,
+                            num_heads=[6, 6, 6, 6],
+                            upsampler='').cuda()
         #self.img_store = args.img_store
         if self.use_wandb:
             self.experiment_folder = new_log(os.path.join(args.save_dir, args.dataset),
@@ -95,6 +95,8 @@ class Trainer:
                 sample = to_cuda(sample)
 
                 output = self.model(sample['source'])
+                if output.shape[0] == 4:
+                    output = output[..., :3, :256, :256]
                 if random.randint(0, 250) == 42:
                     store_images(self.image_folder, self.experiment_name, output, sample["y"], self.epoch)
                 loss = get_loss(output, sample)
@@ -142,7 +144,8 @@ class Trainer:
                 sample = to_cuda(sample)
 
                 output = self.model(sample['source'])
-
+                if output.shape[0] == 4:
+                    output = output[..., :3, :256, :256]
                 loss = get_loss(output, sample)
                 self.val_stats["loss"] += loss.detach().cpu().item()
 
